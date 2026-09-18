@@ -104,6 +104,9 @@ docker pull "${container_image}" || \
 	(docker build \
 		--build-arg GO_VERSION="${GO_VERSION}" \
 		--build-arg RUST_VERSION="${RUST_VERSION}" \
+		--build-arg http_proxy="${http_proxy:-}" \
+		--build-arg https_proxy="${https_proxy:-}" \
+		--build-arg no_proxy="${no_proxy:-}" \
 		-t "${container_image}" \
 		"${script_dir}" && \
 	 push_to_registry "${container_image}")

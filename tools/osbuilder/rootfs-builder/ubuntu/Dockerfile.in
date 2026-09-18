@@ -5,6 +5,14 @@
 ARG IMAGE_REGISTRY=docker.io
 FROM ${IMAGE_REGISTRY}/ubuntu:@OS_VERSION@
 @SET_PROXY@
+# Corporate-proxy support: a non-empty proxy.crt is trusted by this builder's own downloads
+# through a separate bundle. The system bundle stays stock, because rootfs_lib.sh copies it into
+# the guest rootfs.
+COPY proxy.crt /tmp/proxy.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates-build.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates-build.crt \
+    GIT_SSL_CAINFO=/etc/ssl/certs/ca-certificates-build.crt \
+    CARGO_HTTP_CAINFO=/etc/ssl/certs/ca-certificates-build.crt
 
 ENV GO_HOME="/opt"
 ENV GOCACHE="${GO_HOME}/.cache"
@@ -45,6 +53,8 @@ RUN apt-get update && \
     libclang-dev \
     file \
     zstd && \
+    cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates-build.crt && \
+    if [ -s /tmp/proxy.crt ]; then cat /tmp/proxy.crt >> /etc/ssl/certs/ca-certificates-build.crt; fi && \
     apt-get clean && rm -rf /var/lib/apt/lists/&& \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}
 

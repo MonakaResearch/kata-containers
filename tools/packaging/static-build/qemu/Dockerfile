@@ -9,8 +9,18 @@ FROM ubuntu:22.04
 ARG CACHE_TIMEOUT
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PREFIX
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy} \
+    GIT_SSL_CAINFO=/etc/ssl/certs/ca-certificates.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+COPY static-build/qemu/proxy.crt /tmp/proxy.crt
 
 RUN apt-get update && apt-get upgrade -y && \
     apt-get --no-install-recommends install -y \
@@ -55,6 +65,10 @@ RUN apt-get update && apt-get upgrade -y && \
 	    rsync \
 	    zlib1g-dev && \
     if [ "$(uname -m)" != s390x ]; then apt-get install -y --no-install-recommends libpmem-dev; fi && \
+    if [ -s /tmp/proxy.crt ]; then \
+	        cp /tmp/proxy.crt /usr/local/share/ca-certificates/proxy.crt && \
+	        update-ca-certificates; \
+	    fi && \
     apt-get clean && rm -rf /var/lib/apt/lists/
 
 # Detect architecture and set appropriate Ubuntu mirror

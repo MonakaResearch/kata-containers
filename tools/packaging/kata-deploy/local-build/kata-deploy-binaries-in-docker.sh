@@ -97,6 +97,9 @@ docker run \
 	-v "${HOME}"/.docker:/root/.docker \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v "${kata_dir}:${kata_dir}" \
+	--env http_proxy="${http_proxy}" \
+	--env https_proxy="${https_proxy}" \
+	--env no_proxy="${no_proxy:-}" \
 	--env USER="${USER}" \
 	--env ARTEFACT_REGISTRY="${ARTEFACT_REGISTRY}" \
 	--env ARTEFACT_REPOSITORY="${ARTEFACT_REPOSITORY}" \

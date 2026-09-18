@@ -20,12 +20,18 @@ container_image="${AGENT_CONTAINER_BUILDER:-$(get_agent_image_name)}"
 docker pull "${container_image}" || \
 	(docker build \
 	    	--build-arg RUST_TOOLCHAIN="$(get_from_kata_deps ".languages.rust.meta.newest-version")" \
+		--build-arg http_proxy="${http_proxy:-}" \
+		--build-arg https_proxy="${https_proxy:-}" \
+		--build-arg no_proxy="${no_proxy:-}" \
 		-t "${container_image}" "${script_dir}" && \
 	 # No-op unless PUSH_TO_REGISTRY is exported as "yes"
 	 push_to_registry "${container_image}")
 
 # shellcheck disable=SC2154
 docker run --rm -i -v "${repo_root_dir}:${repo_root_dir}" \
+	--env http_proxy="${http_proxy:-}" \
+	--env https_proxy="${https_proxy:-}" \
+	--env no_proxy="${no_proxy:-}" \
 	--env DESTDIR="${DESTDIR}" \
 	--env AGENT_POLICY="${AGENT_POLICY:-no}" \
 	--env INIT_DATA="${INIT_DATA:-yes}" \
