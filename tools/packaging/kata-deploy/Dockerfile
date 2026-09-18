@@ -13,7 +13,16 @@ ARG DESTINATION=/opt/kata-artifacts
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
-RUN apk add --no-cache zstd
+# Corporate-proxy support: an empty proxy.crt is a no-op.
+COPY tools/packaging/proxy.crt /tmp/proxy.crt
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy}
+RUN if [ -s /tmp/proxy.crt ]; then cat /tmp/proxy.crt >> /etc/ssl/certs/ca-certificates.crt; fi && \
+	apk add --no-cache zstd
 
 COPY ${KATA_ARTIFACTS_DIR}/kata-static-*.tar.zst ${DESTINATION}/tarballs/
 COPY ${KATA_ARTIFACTS_DIR}/kata-deploy-static-*.tar.zst ${DESTINATION}/tarballs/

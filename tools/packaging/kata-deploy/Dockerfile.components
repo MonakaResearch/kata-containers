@@ -7,6 +7,18 @@
 
 FROM alpine:3.22 AS nydus-binary-downloader
 
+# Corporate-proxy support: an empty proxy.crt is a no-op.
+COPY tools/packaging/proxy.crt /tmp/proxy.crt
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy} \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+RUN if [ -s /tmp/proxy.crt ]; then cat /tmp/proxy.crt >> /etc/ssl/certs/ca-certificates.crt; fi
+
 # When STATIC_NYDUS_SNAPSHOTTER=yes, download the statically linked release
 # asset (nydus-snapshotter-<ver>-linux-static.tar.gz) instead of the per-arch
 # (dynamically, glibc-linked) one. The static binaries run on musl-only hosts
@@ -41,6 +53,18 @@ RUN \
 #### Build binary package
 FROM ubuntu:22.04 AS rust-builder
 
+# Corporate-proxy support: an empty proxy.crt is a no-op.
+COPY tools/packaging/proxy.crt /tmp/proxy.crt
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy} \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    CARGO_HTTP_CAINFO=/etc/ssl/certs/ca-certificates.crt
+
 # Default to Rust 1.97
 ARG RUST_TOOLCHAIN=1.97
 ENV DEBIAN_FRONTEND=noninteractive
@@ -63,6 +87,10 @@ RUN \
 		libc6-dev \
 		musl-tools && \
 	apt-get clean && rm -rf /var/lib/apt/lists/ && \
+	if [ -s /tmp/proxy.crt ]; then \
+		cp /tmp/proxy.crt /usr/local/share/ca-certificates/proxy.crt && \
+		update-ca-certificates; \
+	fi && \
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN} && \
 	rustup component add rustfmt clippy
 

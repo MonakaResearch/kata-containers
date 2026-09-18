@@ -6,8 +6,17 @@ FROM ubuntu:22.04
 ARG RUST_TOOLCHAIN
 
 COPY install_libseccomp.sh /usr/bin/install_libseccomp.sh
+COPY proxy.crt /tmp/proxy.crt
 
 ENV DEBIAN_FRONTEND=noninteractive
+
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy} \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 ENV RUSTUP_HOME="/opt/rustup"
 ENV CARGO_HOME="/opt/cargo"
@@ -40,6 +49,10 @@ RUN apt-get update && \
 		perl \
 		pkg-config \
 		protobuf-compiler && \
+	if [ -s /tmp/proxy.crt ]; then \
+		cp /tmp/proxy.crt /usr/local/share/ca-certificates/proxy.crt && \
+		update-ca-certificates; \
+	fi && \
 	apt-get clean && rm -rf /var/lib/apt/lists/ && \
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}
 

@@ -11,6 +11,14 @@ ENV RUSTUP_HOME="/opt/rustup"
 ENV CARGO_HOME="/opt/cargo"
 ENV PATH="/opt/cargo/bin/:/opt/go/bin:${PATH}"
 
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy} \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN mkdir ${RUSTUP_HOME} ${CARGO_HOME} ${GOCACHE} && \
@@ -18,6 +26,8 @@ RUN mkdir ${RUSTUP_HOME} ${CARGO_HOME} ${GOCACHE} && \
 
 ARG GO_VERSION
 ARG RUST_VERSION
+
+COPY proxy.crt /tmp/proxy.crt
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -31,6 +41,10 @@ RUN apt-get update && \
         musl-tools \
         protobuf-compiler \
         sudo && \
+        if [ -s /tmp/proxy.crt ]; then \
+            cp /tmp/proxy.crt /usr/local/share/ca-certificates/proxy.crt && \
+            update-ca-certificates; \
+        fi && \
         apt-get clean && rm -rf /var/lib/apt/lists/&& \
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION}
 
