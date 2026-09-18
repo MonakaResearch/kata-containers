@@ -894,6 +894,10 @@ e.g. `{{- include "kata-deploy.commonEnv" . | nindent 8 }}`.
        works out for itself what a pinned directory takes out of its hands. */}}
 - name: K8S_DISTRIBUTION
   value: {{ .Values.k8sDistribution | quote }}
+{{- if .Values.containerRuntime | trim }}
+- name: CONTAINER_RUNTIME
+  value: {{ .Values.containerRuntime | trim | quote }}
+{{- end }}
 {{- if .Values.containerd.configDir | trim }}
 - name: CONTAINERD_CONFIG_DIR
   value: {{ .Values.containerd.configDir | trim | quote }}

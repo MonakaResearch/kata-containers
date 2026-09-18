@@ -252,6 +252,8 @@ pub struct Config {
     ///
     /// Absent when this process was not started by the chart.
     pub k8s_distribution: Option<String>,
+    /// The CRI runtime declared by the operator (`CONTAINER_RUNTIME`); overrides detection, which mistakes k3s/RKE2 nodes on a standalone containerd for the embedded kind.
+    pub container_runtime: Option<String>,
     /// The host directory holding containerd's configuration, when the operator
     /// pinned it themselves (`CONTAINERD_CONFIG_DIR`). Its presence means the
     /// flavour above no longer chose that directory, so the two cannot be
@@ -473,6 +475,11 @@ impl Config {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty());
 
+        let container_runtime = env::var("CONTAINER_RUNTIME")
+            .ok()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty());
+
         let containerd_config_dir = env::var("CONTAINERD_CONFIG_DIR")
             .ok()
             .map(|s| s.trim().to_string())
@@ -528,6 +535,7 @@ impl Config {
             startup_taints,
             container_runtime_version,
             k8s_distribution,
+            container_runtime,
             containerd_config_dir,
             containerd_extra_pod_annotations,
             containerd_shim_extra_pod_annotations_for_arch,
