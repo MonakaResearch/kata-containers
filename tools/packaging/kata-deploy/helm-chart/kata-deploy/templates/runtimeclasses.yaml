@@ -27,6 +27,7 @@
   "qemu-snp-runtime-rs" (dict "memory" "2048Mi" "cpu" "1.0")
   "qemu-tdx" (dict "memory" "2048Mi" "cpu" "1.0")
   "qemu-tdx-runtime-rs" (dict "memory" "2048Mi" "cpu" "1.0")
+  "qemu-cca" (dict "memory" "2048Mi" "cpu" "1.0")
   "qemu-nvidia-cpu" (dict "memory" "320Mi" "cpu" "250m")
   "qemu-nvidia-cpu-runtime-rs" (dict "memory" "320Mi" "cpu" "250m")
   "qemu-nvidia-gpu" (dict "memory" "10240Mi" "cpu" "1.0")
@@ -140,6 +141,7 @@ scheduling:
        point the RuntimeClass at nodes this install does not hold. */}}
 {{- $ownershipKeys := list "katacontainers.io/kata-runtime" $instanceMarker }}
 {{- /* TEE shims: snp, tdx, -se, -se-runtime-rs (SE = IBM Secure Execution / SEL) */ -}}
+{{- /* qemu-cca is deliberately absent: NFD cannot label CCA nodes (RME is only visible via a KVM ioctl), so a label here would select no node; users set shims.qemu-cca.runtimeClass.nodeSelector. */ -}}
 {{- $isTeeShim := or (contains "snp" .shim) (contains "tdx" .shim) (hasSuffix "-se" .shim) (hasSuffix "-se-runtime-rs" .shim) -}}
 {{- $isPureTeeShim := and $isTeeShim (not (contains "nvidia-gpu" .shim)) -}}
 {{- if or (and .shimConfig.runtimeClass .shimConfig.runtimeClass.nodeSelector) (and .useShimNodeSelectors $isPureTeeShim) }}

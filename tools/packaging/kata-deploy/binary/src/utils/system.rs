@@ -215,6 +215,11 @@ mod tests {
         "/opt/kata/share/defaults/kata-containers/runtimes/qemu-tdx"
     )]
     #[case(
+        "qemu-cca",
+        "/opt/kata",
+        "/opt/kata/share/defaults/kata-containers/runtimes/qemu-cca"
+    )]
+    #[case(
         "fc",
         "/opt/kata",
         "/opt/kata/share/defaults/kata-containers/runtimes/fc"
@@ -283,6 +288,7 @@ mod tests {
             "qemu-tdx",
             "qemu-snp",
             "qemu-se",
+            "qemu-cca",
             "qemu-coco-dev",
             "qemu-nvidia-cpu",
             "qemu-nvidia-gpu",

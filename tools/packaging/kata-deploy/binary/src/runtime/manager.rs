@@ -45,6 +45,12 @@ async fn is_unit_active(unit: &str) -> bool {
 }
 
 pub async fn get_container_runtime(config: &Config) -> Result<String> {
+    // A declared runtime wins over the probes below, which cannot tell a k3s/RKE2 node on the standalone containerd from one on the embedded copy; host-check still validates it.
+    if let Some(declared) = config.container_runtime.as_deref() {
+        info!("container runtime declared by the chart: {declared}; skipping detection");
+        return Ok(declared.to_string());
+    }
+
     let runtime_version = config
         .resolve_container_runtime_version()
         .await
@@ -489,6 +495,15 @@ mod tests {
     use rstest::rstest;
     use std::time::Duration;
     use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn a_declared_runtime_is_returned_without_probing() {
+        // k3s.service active but the kubelet on the standalone containerd: detection would say "k3s".
+        let mut config = crate::artifacts::install::tests::test_config("qemu", "/opt/kata");
+        config.container_runtime = Some("containerd".to_string());
+        config.k8s_distribution = Some("k8s".to_string());
+        assert_eq!(get_container_runtime(&config).await.unwrap(), "containerd");
+    }
 
     #[test]
     fn declared_microk8s_survives_an_inactive_runtime() {

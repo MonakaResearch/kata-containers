@@ -31,6 +31,7 @@ const ALL_SHIMS: &[&str] = &[
     "remote",
     // QEMU shims
     "qemu",
+    "qemu-cca",
     "qemu-coco-dev",
     "qemu-coco-dev-runtime-rs",
     "qemu-nvidia-cpu",
@@ -2102,6 +2103,7 @@ pub(crate) mod tests {
     #[case("qemu-tdx", "qemu")]
     #[case("qemu-snp", "qemu")]
     #[case("qemu-se", "qemu")]
+    #[case("qemu-cca", "qemu")]
     #[case("qemu-coco-dev", "qemu")]
     #[case("qemu-nvidia-cpu", "qemu")]
     #[case("qemu-nvidia-cpu-runtime-rs", "qemu")]
@@ -2722,6 +2724,7 @@ pub(crate) mod tests {
             startup_taints: vec![],
             container_runtime_version: None,
             k8s_distribution: None,
+            container_runtime: None,
             containerd_config_dir: None,
             containerd_extra_pod_annotations: vec![],
             containerd_shim_extra_pod_annotations_for_arch: vec![],
