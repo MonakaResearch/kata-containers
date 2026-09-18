@@ -28,6 +28,9 @@
     "qemu-tdx-runtime-rs": {
       "x86_64": ["shim-v2-rust", "qemu", "kernel", "rootfs-image", "rootfs-image-coco-extension", "ovmf-tdx"]
     },
+    "qemu-cca": {
+      "aarch64": ["shim-v2-go", "qemu-cca-experimental", "kernel-cca-confidential", "rootfs-cca-confidential-initrd", "ovmf-cca"]
+    },
     "qemu-se": {
       "s390x": ["shim-v2-go", "qemu", "virtiofsd", "kernel", "rootfs-initrd-confidential", "boot-image-se"]
     },

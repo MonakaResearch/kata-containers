@@ -18,6 +18,7 @@ shims:
 
   # Enable TEE shims (qemu-snp, qemu-snp-runtime-rs, qemu-tdx, qemu-tdx-runtime-rs, qemu-se, qemu-se-runtime-rs, qemu-coco-dev, qemu-coco-dev-runtime-rs)
   # NFD TEE labels (snp, tdx, se) are auto-injected into RuntimeClasses when NFD is detected; no need to set nodeSelector here.
+  # (Not for qemu-cca: NFD cannot detect CCA - see the block below.)
   qemu-snp:
     enabled: true
     supportedArches:
@@ -68,6 +69,21 @@ shims:
     containerd:
       snapshotter: nydus
       forceGuestPull: false
+    crio:
+      guestPull: true
+    agent:
+      httpsProxy: ""
+      noProxy: ""
+
+  # Arm CCA: off even here (emulation-only, NFD cannot label its nodes); enable by hand, pin with runtimeClass.nodeSelector, and set defaultShim.arm64 if it is the only arm64 shim.
+  qemu-cca:
+    enabled: false
+    supportedArches:
+      - arm64
+    allowedHypervisorAnnotations: []
+    containerd:
+      snapshotter: ""
+      forceGuestPull: true
     crio:
       guestPull: true
     agent:

@@ -11,6 +11,7 @@ access to a privileged kata-deploy pod on every node.
 
 The rules match CPU security features, so they are harmless where those features
 do not exist; no architecture gating is needed.
+No rule for Arm CCA (qemu-cca): the kernel exposes RME only via the KVM_CAP_ARM_RME ioctl, so there is nothing on the filesystem for NFD to match.
 */ -}}
 {{- if eq (include "kata-deploy.nfdRulesActive" . | trim) "true" }}
 apiVersion: nfd.k8s-sigs.io/v1alpha1

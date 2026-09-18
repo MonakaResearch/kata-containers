@@ -292,6 +292,9 @@ monitor:
 # says nothing about the kubelet, so this value still applies there.
 k8sDistribution: "k8s"  # k8s, k3s, rke2, k0s, microk8s
 
+# CRI runtime override (empty = detect); set "containerd" with k8sDistribution "k8s" on k3s/RKE2 nodes that use the standalone containerd.service. See docs/helm-configuration.md.
+containerRuntime: ""
+
 # Containerd configuration overrides
 # These override the auto-detected paths based on k8sDistribution.
 # Use these when your containerd setup doesn't match any built-in distribution preset.

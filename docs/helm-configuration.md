@@ -141,6 +141,60 @@ runtime handlers.
 
 It's best to reference the default `values.yaml` file above for more details.
 
+### Arm CCA (`qemu-cca`)
+
+`qemu-cca` runs Kata guests as Arm CCA Realms. It is experimental and opt-in. Like the
+other confidential shims it is not in the default `values.yaml`; its block lives in
+[`try-kata-tee.values.yaml`](#try-kata-teevaluesyaml), where it is present but disabled.
+Install with that profile and enable it there. On a CCA-only node, also turn the
+profile's other TEE shims off and drop its nydus setup, which `qemu-cca` does not use
+(it pulls images in the guest):
+
+```sh
+helm install kata-deploy oci://ghcr.io/kata-containers/kata-deploy-charts/kata-deploy \
+  --version VERSION -n kube-system \
+  -f try-kata-tee.values.yaml \
+  --set shims.qemu-cca.enabled=true \
+  --set defaultShim.arm64=qemu-cca \
+  --set-json 'snapshotter.setup=[]' \
+  --set shims.qemu-snp.enabled=false --set shims.qemu-snp-runtime-rs.enabled=false \
+  --set shims.qemu-tdx.enabled=false --set shims.qemu-tdx-runtime-rs.enabled=false \
+  --set shims.qemu-se.enabled=false --set shims.qemu-se-runtime-rs.enabled=false \
+  --set shims.qemu-coco-dev.enabled=false --set shims.qemu-coco-dev-runtime-rs.enabled=false \
+  --set 'shims.qemu-cca.runtimeClass.nodeSelector.cca\.example\.com/realm-capable=true'
+```
+
+Replace the last line's label with whatever marks your CCA-capable nodes. Setting
+`shims.qemu-cca.enabled=true` without `-f try-kata-tee.values.yaml` fails: the default
+values carry no `supportedArches` for `qemu-cca`, and the chart refuses to render it.
+
+Three things differ from the other confidential shims:
+
+- **No automatic node selection.** For `qemu-snp`, `qemu-tdx` and `qemu-se` the
+  RuntimeClass gains a `nodeSelector` on a node-feature-discovery label when NFD is
+  present. NFD has no arm64 security source, and the CCA host kernel exposes RME
+  availability only through the `KVM_CAP_ARM_RME` ioctl - there is nothing on the
+  filesystem for NFD to match - so `qemu-cca` gets none. Pin it with
+  `shims.qemu-cca.runtimeClass.nodeSelector`, or the RuntimeClass selects every
+  node the chart installed on.
+- **`defaultShim.arm64`** must name it when it is the only arm64 shim enabled. With
+  `disableAll: true` the chart otherwise falls back to `qemu-runtime-rs`, and the
+  installer rejects a default that is not among the enabled shims.
+- **It boots from the confidential initrd** (`rootfs-cca-confidential-initrd`), not the
+  rootfs image, and uses the `qemu-cca-experimental` QEMU build with its own firmware
+  (`AAVMF_*.cca.fd`).
+
+!!! note "There is no CCA hardware yet"
+
+    Every `qemu-cca` deployment today runs on a QEMU-emulated CCA host. The shipped
+    config sizes `dial_timeout` and `create_container_timeout` for that (a Realm needs
+    several minutes to reach the agent under emulation), so do not lower them to match
+    the other TEE configs.
+
+The guest reaches its Key Broker Service the way any CoCo workload does - through
+the `io.katacontainers.config.hypervisor.kernel_params` pod annotation or init-data -
+not through anything in the chart.
+
 ### NVIDIA guest settings
 
 The NVIDIA GPU images boot [NVRC](https://github.com/NVIDIA/nvrc) as their init
@@ -397,6 +451,29 @@ leave the kubelet's own `/var/lib/kubelet` alone and need nothing.
     nydus configuration breaks those layers. Deploy kata-deploy with erofs or nydus
     **only on nodes where neither snapshotter has been used before**, and leave
     `snapshotter.setup` empty on nodes that already have one of them configured.
+
+### containerRuntime
+
+The probe above identifies a node's CRI runtime by which systemd unit is active, so a
+k3s or RKE2 node whose kubelet is pointed at the standalone `containerd.service`
+(`--container-runtime-endpoint unix:///run/containerd/containerd.sock`) is read as the
+embedded kind: the probe answers `k3s`, the containerd template it then looks for was
+never rendered, and the restart would hit the wrong unit. As the warning above notes,
+`k8sDistribution` cannot make up the difference - it says which configuration layout to
+write, never which unit to act on - and pinning `containerd.configDir` does not either,
+because the code path is chosen by runtime name.
+
+Declaring the runtime does:
+
+```yaml title="values.yaml"
+containerRuntime: containerd   # empty = detect
+k8sDistribution: k8s
+```
+
+The declared value wins over the probe and is then checked against the supported
+runtimes exactly as a detected one is. Accepted values: `containerd`, `crio`, `k3s`,
+`k3s-agent`, `rke2-agent`, `rke2-server`, `k0s-worker`, `k0s-controller`, `microk8s`.
+Leave it empty everywhere else; the probe is right for the common case.
 
 ### nodeBinaries
 
@@ -1344,6 +1421,7 @@ Includes:
 - `qemu-se` and `qemu-se-runtime-rs` - IBM Secure Execution for Linux (SEL) (s390x)
 - `qemu-coco-dev` - Confidential Containers development (amd64, s390x)
 - `qemu-coco-dev-runtime-rs` - Confidential Containers development Rust runtime (amd64, arm64, s390x)
+- `qemu-cca` - Arm CCA (arm64) - **present but disabled** in the profile; see [Arm CCA](#arm-cca-qemu-cca) for why it must be enabled by hand
 
 The TEE RuntimeClasses also take part in
 [TEE key advertisement](#tee-key-advertisement) and get
