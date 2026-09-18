@@ -5,6 +5,8 @@
 ARG IMAGE_REGISTRY=docker.io
 FROM ${IMAGE_REGISTRY}/ubuntu:@OS_VERSION@
 @SET_PROXY@
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+COPY proxy.crt /tmp/proxy.crt
 
 ENV GO_HOME="/opt"
 ENV GOCACHE="${GO_HOME}/.cache"
@@ -45,6 +47,10 @@ RUN apt-get update && \
     libclang-dev \
     file \
     zstd && \
+    if [ -s /tmp/proxy.crt ]; then \
+        cp /tmp/proxy.crt /usr/local/share/ca-certificates/proxy.crt && \
+        update-ca-certificates; \
+    fi && \
     apt-get clean && rm -rf /var/lib/apt/lists/&& \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}
 

@@ -8,9 +8,21 @@ ENV INSTALL_IN_GOPATH=false
 # Required for libxml2-dev
 ENV TZ=Etc/UTC
 
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} \
+    https_proxy=${https_proxy} \
+    no_proxy=${no_proxy} \
+    PIP_CERT=/etc/ssl/certs/ca-certificates.crt \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 COPY install_yq.sh /usr/bin/install_yq.sh
 COPY install_oras.sh /usr/bin/install_oras.sh
 COPY install_gh.sh /usr/bin/install_gh.sh
+COPY proxy.crt /tmp/proxy.crt
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -24,6 +36,10 @@ RUN apt-get update && \
         git \
         wget \
         sudo && \
+    if [ -s /tmp/proxy.crt ]; then \
+        cp /tmp/proxy.crt /usr/local/share/ca-certificates/proxy.crt && \
+        update-ca-certificates; \
+    fi && \
     apt-get clean && rm -rf /var/lib/apt/lists/ && \
     install_yq.sh && \
     install_oras.sh && \

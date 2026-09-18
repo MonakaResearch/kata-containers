@@ -47,6 +47,9 @@ DOCKERFILE="${REPO_ROOT}/tools/packaging/kata-deploy/Dockerfile"
 
 echo "Building the kata-deploy image"
 docker buildx build --platform "${PLATFORM}" --provenance false --sbom false \
+	--build-arg http_proxy="${http_proxy:-}" \
+	--build-arg https_proxy="${https_proxy:-}" \
+	--build-arg no_proxy="${no_proxy:-}" \
 	-f "${DOCKERFILE}" \
 	--tag "${IMAGE_TAG}" --push .
 
@@ -55,6 +58,9 @@ if [[ -n "${TAG}" ]]; then
 
 	echo "Building the ${ADDITIONAL_TAG} image"
 	docker buildx build --platform "${PLATFORM}" --provenance false --sbom false \
+		--build-arg http_proxy="${http_proxy:-}" \
+		--build-arg https_proxy="${https_proxy:-}" \
+		--build-arg no_proxy="${no_proxy:-}" \
 		-f "${DOCKERFILE}" \
 		--tag "${ADDITIONAL_TAG}" --push .
 fi

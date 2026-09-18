@@ -58,6 +58,9 @@ container_image="${QEMU_CONTAINER_BUILDER:-$(get_qemu_image_name)}"
 	push_to_registry "${container_image}")
 
 "${container_engine}" run --rm -i \
+	--env http_proxy="${http_proxy}" \
+	--env https_proxy="${https_proxy}" \
+	--env no_proxy="${no_proxy:-}" \
 	--env BUILD_SUFFIX="${build_suffix}" \
 	--env PKGVERSION="${PKGVERSION}" \
 	--env QEMU_DESTDIR="${qemu_destdir}" \

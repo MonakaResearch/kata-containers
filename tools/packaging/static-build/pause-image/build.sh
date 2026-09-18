@@ -31,6 +31,9 @@ container_image="${PAUSE_IMAGE_CONTAINER_BUILDER:-$(get_pause_image_name)}"
 # shellcheck disable=SC2154,SC2086
 docker pull "${container_image}" || \
 	(docker build \
+		--build-arg http_proxy="${http_proxy:-}" \
+		--build-arg https_proxy="${https_proxy:-}" \
+		--build-arg no_proxy="${no_proxy:-}" \
 		-t "${container_image}" "${script_dir}" && \
 	 # No-op unless PUSH_TO_REGISTRY is exported as "yes"
 	 push_to_registry "${container_image}")
@@ -38,6 +41,9 @@ docker pull "${container_image}" || \
 # shellcheck disable=SC2154
 docker run --rm -i -v "${repo_root_dir}:${repo_root_dir}" \
 	-w "${PWD}" \
+	--env http_proxy="${http_proxy:-}" \
+	--env https_proxy="${https_proxy:-}" \
+	--env no_proxy="${no_proxy:-}" \
 	--env DESTDIR="${DESTDIR}" \
 	--env pause_image_repo="${pause_image_repo}" \
 	--env pause_image_version="${pause_image_version}" \

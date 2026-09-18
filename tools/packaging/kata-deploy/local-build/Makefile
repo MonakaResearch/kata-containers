@@ -61,12 +61,15 @@ BASE_SERIAL_TARBALLS = rootfs-image-tarball \
 else ifeq ($(ARCH), aarch64)
 BASE_TARBALLS = serial-targets \
 	firecracker-tarball \
+	kernel-cca-confidential-tarball \
 	kernel-debug-tarball \
 	kernel-dragonball-experimental-tarball \
 	kernel-tarball \
 	nydus-tarball \
+	ovmf-cca-tarball \
 	ovmf-tarball \
 	qemu-no-shared-fs-tarball \
+	qemu-cca-experimental-tarball \
 	qemu-tarball \
 	shim-v2-go-tarball \
 	shim-v2-rust-tarball \
@@ -79,6 +82,8 @@ BASE_SERIAL_TARBALLS = openvmm-tarball \
 	rootfs-image-nvidia-gpu-tarball \
 	rootfs-image-nvidia-tarball \
 	rootfs-image-nvidia-gpu-extension-tarball \
+	rootfs-cca-confidential-image-tarball \
+	rootfs-cca-confidential-initrd-tarball \
 	rootfs-initrd-tarball \
 	cloud-hypervisor-tarball
 else ifeq ($(ARCH), ppc64le)
@@ -285,6 +290,9 @@ kernel-tarball:
 kernel-debug-tarball:
 	${MAKE} $@-build
 
+kernel-cca-confidential-tarball:
+	${MAKE} $@-build
+
 nydus-tarball:
 	${MAKE} $@-build
 
@@ -292,6 +300,9 @@ ovmf-sev-tarball:
 	${MAKE} $@-build
 
 ovmf-tdx-tarball:
+	${MAKE} $@-build
+
+ovmf-cca-tarball:
 	${MAKE} $@-build
 
 ovmf-tarball:
@@ -304,6 +315,9 @@ qemu-snp-experimental-tarball:
 	${MAKE} $@-build
 
 qemu-tdx-experimental-tarball:
+	${MAKE} $@-build
+
+qemu-cca-experimental-tarball:
 	${MAKE} $@-build
 
 qemu-tarball:
@@ -377,6 +391,14 @@ rootfs-image-nvidia-tarball: $(DEPS)
 # ships neither the agent nor NVRC/busybox; it only needs the Kata NVIDIA modules.
 DEPS := kernel-nvidia-gpu-tarball
 rootfs-image-nvidia-gpu-extension-tarball: $(DEPS)
+	${MAKE} $@-build
+
+DEPS := agent-tarball pause-image-tarball coco-guest-components-tarball kernel-cca-confidential-tarball
+rootfs-cca-confidential-image-tarball: $(DEPS)
+	${MAKE} $@-build
+
+DEPS := agent-tarball pause-image-tarball coco-guest-components-tarball kernel-cca-confidential-tarball
+rootfs-cca-confidential-initrd-tarball: $(DEPS)
 	${MAKE} $@-build
 
 shim-v2-go-tarball:

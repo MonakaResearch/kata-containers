@@ -47,6 +47,9 @@ build_kata_deploy_binary() {
 	docker buildx build \
 		--target rust-builder \
 		--build-arg "RUST_TOOLCHAIN=${rust_toolchain}" \
+		--build-arg http_proxy="${http_proxy:-}" \
+		--build-arg https_proxy="${https_proxy:-}" \
+		--build-arg no_proxy="${no_proxy:-}" \
 		--output "type=tar,dest=${rust_builder_tar}" \
 		-f "${repo_root_dir}/tools/packaging/kata-deploy/Dockerfile.components" \
 		"${repo_root_dir}"
@@ -69,6 +72,9 @@ build_nydus_snapshotter_for_coco_guest_pull() {
 	docker buildx build \
 		--target nydus-binary-downloader \
 		--build-arg "STATIC_NYDUS_SNAPSHOTTER=${static_nydus_snapshotter}" \
+		--build-arg http_proxy="${http_proxy:-}" \
+		--build-arg https_proxy="${https_proxy:-}" \
+		--build-arg no_proxy="${no_proxy:-}" \
 		--output "type=local,dest=${build_dir}/nydus-snapshotter-out" \
 		-f "${repo_root_dir}/tools/packaging/kata-deploy/Dockerfile.components" \
 		"${repo_root_dir}"

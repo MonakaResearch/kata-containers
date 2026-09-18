@@ -1,0 +1,8 @@
+# Build output/scratch trees under this dir get included in the build
+# context for any Dockerfile built with tools/packaging/ as context (e.g.
+# static-build/qemu's build-base-qemu.sh). Excluding them matters beyond
+# image size: a completed rootfs build leaves real device nodes under
+# kata-deploy/local-build/build/*/builddir/rootfs-image/ubuntu_rootfs/dev/
+# (from mmdebstrap) that the legacy builder cannot read into a context
+# tarball at all, hard-failing any later build that shares this context root.
+kata-deploy/local-build/build/
